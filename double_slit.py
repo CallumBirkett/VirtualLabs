@@ -1,6 +1,6 @@
 import numpy as np 
 import matplotlib.pyplot as plt 
-from matplotlib.widgets import Slider, Button, CheckButtons
+from matplotlib.widgets import Slider, Button
 
 # screen coords when screen is viewed as a 1d array, +/- 5mm
 x_values = np.arange(-0.005, 0.005, 0.00001) 
@@ -79,10 +79,12 @@ reset_ax = plt.axes([0.02, 0.02, 0.12, 0.06])
 reset_button = Button(reset_ax, "Reset")
 
 # toggle buttom axes: left, bottom, width, height
-check_ax = plt.axes([0.15, 0.02, 0.12, 0.06])
+env_button_ax = plt.axes([0.15, 0.02, 0.20, 0.06])
+int_button_ax = plt.axes([0.36, 0.02, 0.20, 0.06])
 
 # create toggle buttons
-checks = CheckButtons(check_ax, ["Envelope", "Interference"], [False, False])
+env_button = Button(env_button_ax, "☐ Envelope")
+int_button = Button(int_button_ax, "☐ Interference")
 
 # update function to be called when slider is changed.
 def update(val):
@@ -110,13 +112,30 @@ def reset(event):
     screen_distance_slider.reset()
 
 # toggle envelope and interference by check box
-def toggle(label):
-    if label == "Envelope":
-        line_env.set_visible(not line_env.get_visible())
-    elif label == "Interference":
-        line_int.set_visible(not line_int.get_visible())
-
+def toggle_envelope(event):
+    visible = not line_env.get_visible()
+    line_env.set_visible(visible)
+    env_button.label.set_text(("☑ " if visible else "☐ ") + "Envelope")
+    refresh_legend()
     fig.canvas.draw_idle()
+
+# toggle envelope and interference by check box
+def toggle_interference(event):
+    visible = not line_int.get_visible()
+    line_int.set_visible(visible)
+    int_button.label.set_text(("☑ " if visible else "☐ ") + "Interference")
+    refresh_legend()
+    fig.canvas.draw_idle()
+
+# refresh the legend depending on which curves are visible
+def refresh_legend():
+    handles, labels = [], []
+    for line, label in [(line_I, "Total Intensity"), (line_env, "Envelope"), (line_int, "Interference")]:
+        if line.get_visible():
+            handles.append(line)
+            labels.append(label)
+    #update legend with visible curves
+    ax.legend(handles, labels, loc="upper right")
 
 # call update when slider changed
 wavelength_slider.on_changed(update)
@@ -128,7 +147,11 @@ screen_distance_slider.on_changed(update)
 reset_button.on_clicked(reset)
 
 # call toggle when checkbox is clicked
-checks.on_clicked(toggle)
+env_button.on_clicked(toggle_envelope)
+int_button.on_clicked(toggle_interference)
+
+# match legend to initial visibility
+refresh_legend()
 
 plt.show()
     
