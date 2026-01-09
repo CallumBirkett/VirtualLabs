@@ -17,23 +17,24 @@ def intensity(a=slit_width, lam=wavelength, d=distance_between_slits, L=screen_d
     # small angle approx. screen height over screen distance - see sin(theta) = tan(theta) =approx. 0
     sin_theta = x / L 
 
-    # path difference
+    # path difference between point sources at the slits
     Delta = d * sin_theta
 
-    # phase difference
+    # phase difference as fraction of 2pi cycle
     phi = (2 * np.pi / lam) * Delta 
 
-    # interference
+    # normalised intereference, this is a proportionality but constants have been set to 1
     interference = np.cos(phi / 2) ** 2
 
-    # diffraction envelope
+    # diffraction envelope caused by single slit diffraction, controls wave direction
     alpha = (np.pi * a / lam) * sin_theta 
 
     # compute sin(alpha) / alpha. Blows up at alpha = 0, but the limit exists there. 
     envelope = np.ones_like(alpha) # initialise a flat shape for the envelope
-    nonzero = alpha != 0 # find nozero values of alpha
+    nonzero = np.abs(alpha) > 1e-12 # find nozero values of alpha (up to numerical precision)
     envelope[nonzero] = (np.sin(alpha[nonzero])/alpha[nonzero]) ** 2 # shape is followed, defaults to 1 when alpha = 0
 
+    # relative (normalised) intensity is a product of interferences and diffraciton at each slit
     intensity = envelope * interference
 
     return sin_theta ,Delta, phi, envelope, interference, intensity # return all components
@@ -66,7 +67,7 @@ screen_distance_slider_ax = plt.axes([0.25, 0.2, 0.5, 0.05])
 distance_between_slits_slider_ax = plt.axes([0.25, 0.15, 0.5, 0.05])
 
 # create sliders. Normalise values to whole numbers for readability
-wavelength_slider = Slider(wavelength_slider_ax, 'Wavelength (nm)', 100, 1000, valinit=wavelength*1e9, valstep=5)
+wavelength_slider = Slider(wavelength_slider_ax, 'Wavelength (nm)', 400, 700, valinit=wavelength*1e9, valstep=5)
 slit_width_slider = Slider(slit_width_slider_ax, 'Slit Width (µm)', 10, 1000, valinit=slit_width*1e6, valstep=5)
 distance_between_slits_slider = Slider(distance_between_slits_slider_ax, 'Slit Separation (mm)', .1, 10, valinit=distance_between_slits*1e3,valstep=.05)
 screen_distance_slider = Slider(screen_distance_slider_ax, 'Screen Distance (cm)', 10, 100, valinit=screen_distance*1e2, valstep=5)
